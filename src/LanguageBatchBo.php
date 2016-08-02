@@ -63,7 +63,6 @@ class LanguageBatchBo
         // If we got correct data we store it.
         $destination = self::getLanguageCachePath($application) . $language . '.php';
         // If there is no folder yet, we'll create it.
-        var_dump($destination);
         if (!is_dir(dirname($destination))) {
             mkdir(dirname($destination), 0755, true);
         }
