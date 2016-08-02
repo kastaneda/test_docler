@@ -7,10 +7,20 @@ namespace Language;
  */
 class LanguageBatchBo
 {
+    /** @var LanguageFilesApi */
+    protected static $languageFilesApi;
+
+    protected static function getLanguageFilesApi()
+    {
+        if (empty(self::$languageFilesApi)) {
+            self::$languageFilesApi = new LanguageFilesApi(['\\Language\\ApiCall', 'call']);
+        }
+
+        return self::$languageFilesApi;
+    }
+
     /**
      * Starts the language file generation.
-     *
-     * @return void
      */
     public static function generateLanguageFiles()
     {
@@ -19,10 +29,10 @@ class LanguageBatchBo
 
         echo "\nGenerating language files\n";
         foreach ($applications as $application => $languages) {
-            echo "[APPLICATION: " . $application . "]\n";
+            echo '[APPLICATION: '.$application."]\n";
             foreach ($languages as $language) {
-                echo "\t[LANGUAGE: " . $language . "]";
-                $data = self::getLanguageFile($application, $language);
+                echo "\t[LANGUAGE: ".$language.']';
+                $data = self::getLanguageFilesApi()->getLanguageFile($application, $language);
                 $target = self::getLanguageCacheFileName($application, $language);
                 if (!self::saveFile($target, $data)) {
                     throw new \Exception('Unable to generate language file!');
@@ -33,40 +43,23 @@ class LanguageBatchBo
     }
 
     /**
-     * Gets the language file for the given language.
-     *
-     * @param string $application   The name of the application.
-     * @param string $language      The identifier of the language.
-     * @throws \Exception           If there was an error during the download of the language file.
-     * @return string               The content of the language file.
-     */
-    protected static function getLanguageFile($application, $language)
-    {
-        try {
-            return self::callLanguageFilesApi('getLanguageFile', ['language' => $language]);
-        } catch (\Exception $e) {
-            throw new \Exception('Error during getting language file: (' . $application . '/' . $language . ')');
-        }
-    }
-
-    /**
      * Gets the language file name for the given language.
      *
      * @param string $application   The name of the application.
      * @param string $language      The identifier of the language.
+     *
      * @return string               The file name.
      */
     protected static function getLanguageCacheFileName($application, $language)
     {
         return Config::get('system.paths.root')
-            . '/cache/' . $application . '/' . $language . '.php';
+            .'/cache/'.$application.'/'.$language.'.php';
     }
 
     /**
      * Gets the language files for the applet and puts them into the cache.
      *
      * @throws \Exception           If there was an error.
-     * @return void
      */
     public static function generateAppletLanguageXmlFiles()
     {
@@ -79,18 +72,18 @@ class LanguageBatchBo
 
         foreach ($applets as $appletDirectory => $appletLanguageId) {
             echo " Getting > $appletLanguageId ($appletDirectory) language xmls..\n";
-            $languages = self::getAppletLanguages($appletLanguageId);
+            $languages = self::getLanguageFilesApi()->getAppletLanguages($appletLanguageId);
             if (empty($languages)) {
-                throw new \Exception('There is no available languages for the ' . $appletLanguageId . ' applet.');
+                throw new \Exception('There is no available languages for the '.$appletLanguageId.' applet.');
             }
 
-            echo ' - Available languages: ' . join(', ', $languages) . "\n";
+            echo ' - Available languages: '.implode(', ', $languages)."\n";
             foreach ($languages as $language) {
-                $data = self::getAppletLanguageFile($appletLanguageId, $language);
+                $data = self::getLanguageFilesApi()->getAppletLanguageFile($appletLanguageId, $language);
                 $target = self::getAppletLanguageCacheFileName($language);
                 if (!self::saveFile($target, $data)) {
-                    throw new \Exception('Unable to save applet: (' . $appletLanguageId . ') language: (' . $language
-                        . ') xml (' . $target . ')!');
+                    throw new \Exception('Unable to save applet: ('.$appletLanguageId.') language: ('.$language
+                        .') xml ('.$target.')!');
                 }
                 echo " OK saving $target was successful.\n";
             }
@@ -101,96 +94,25 @@ class LanguageBatchBo
     }
 
     /**
-     * Gets the available languages for the given applet.
-     *
-     * @param string $applet        The applet identifier.
-     * @return array                The list of the available applet languages.
-     */
-    protected static function getAppletLanguages($applet)
-    {
-        try {
-            return self::callLanguageFilesApi('getAppletLanguages', ['applet' => $applet]);
-        } catch (\Exception $e) {
-            throw new \Exception('Getting languages for applet (' . $applet . ') was unsuccessful ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Gets a language xml for an applet.
-     *
-     * @param string $applet        The identifier of the applet.
-     * @param string $language      The language identifier.
-     * @return string|false         The content of the language file or false if weren't able to get it.
-     */
-    protected static function getAppletLanguageFile($applet, $language)
-    {
-        try {
-            return self::callLanguageFilesApi('getAppletLanguageFile', ['applet' => $applet, 'language' => $language]);
-        } catch (\Exception $e) {
-            throw new \Exception('Getting language xml for applet: ('
-                . $applet . ') on language: (' . $language . ') was unsuccessful: '
-                . $e->getMessage());
-        }
-    }
-
-    /**
-     * Gets the language file name for an applet
+     * Gets the language file name for an applet.
      *
      * @param string $language      The identifier of the language.
+     *
      * @return string               The file name.
      */
     protected static function getAppletLanguageCacheFileName($language)
     {
         return Config::get('system.paths.root')
-            . '/cache/flash/lang_' . $language . '.xml';
+            .'/cache/flash/lang_'.$language.'.xml';
     }
 
-    /**
-     * Perform the LanguageFiles API call and check result.
-     *
-     * @param string $method        The API method name.
-     * @param string $language      Arguments passed to the method.
-     * @throws \Exception           If the API call was not successful.
-     * @return string               Resulting data.
-     */
-    protected static function callLanguageFilesApi($method, $arguments)
-    {
-        $result = ApiCall::call(
-            'system_api',
-            'language_api',
-            [
-                'system' => 'LanguageFiles',
-                'action' => $method,
-            ],
-            $arguments
-        );
-
-        // Error during the api call.
-        if ($result === false || !isset($result['status'])) {
-            throw new \Exception('Error during the api call');
-        }
-
-        // Wrong response.
-        if ($result['status'] != 'OK') {
-            throw new \Exception('Wrong response: '
-                . (!empty($result['error_type']) ? 'Type(' . $result['error_type'] . ') ' : '')
-                . (!empty($result['error_code']) ? 'Code(' . $result['error_code'] . ') ' : '')
-                . ((string)$result['data']));
-        }
-
-        // Wrong content.
-        if ($result['data'] === false) {
-            throw new \Exception('Wrong content!');
-        }
-
-        return $result['data'];
-    }
 
     /**
      * Save the data to the file.
      *
-     * @param string $filename      The name of the file
-     * @param string $content       The data
+     * @param string $filename      The name of the file.
+     * @param string $content       The data.
+     *
      * @return bool                 True if operation was successful.
      */
     protected static function saveFile($filename, $content)
