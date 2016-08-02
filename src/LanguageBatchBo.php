@@ -24,11 +24,10 @@ class LanguageBatchBo
                 echo "\t[LANGUAGE: " . $language . "]";
                 $data = self::getLanguageFile($application, $language);
                 $target = self::getLanguageCacheFileName($application, $language);
-                if (self::saveFile($target, $data)) {
-                    echo " OK\n";
-                } else {
+                if (!self::saveFile($target, $data)) {
                     throw new \Exception('Unable to generate language file!');
                 }
+                echo " OK\n";
             }
         }
     }
@@ -83,19 +82,17 @@ class LanguageBatchBo
             $languages = self::getAppletLanguages($appletLanguageId);
             if (empty($languages)) {
                 throw new \Exception('There is no available languages for the ' . $appletLanguageId . ' applet.');
-            } else {
-                echo ' - Available languages: ' . implode(', ', $languages) . "\n";
             }
-            $path = Config::get('system.paths.root') . '/cache/flash';
+
+            echo ' - Available languages: ' . join(', ', $languages) . "\n";
             foreach ($languages as $language) {
-                $xmlContent = self::getAppletLanguageFile($appletLanguageId, $language);
-                $xmlFile    = $path . '/lang_' . $language . '.xml';
-                if (self::saveFile($xmlFile, $xmlContent)) {
-                    echo " OK saving $xmlFile was successful.\n";
-                } else {
+                $data = self::getAppletLanguageFile($appletLanguageId, $language);
+                $target = self::getAppletLanguageCacheFileName($language);
+                if (!self::saveFile($target, $data)) {
                     throw new \Exception('Unable to save applet: (' . $appletLanguageId . ') language: (' . $language
-                        . ') xml (' . $xmlFile . ')!');
+                        . ') xml (' . $target . ')!');
                 }
+                echo " OK saving $target was successful.\n";
             }
             echo " < $appletLanguageId ($appletDirectory) language xml cached.\n";
         }
@@ -118,7 +115,6 @@ class LanguageBatchBo
         }
     }
 
-
     /**
      * Gets a language xml for an applet.
      *
@@ -135,6 +131,18 @@ class LanguageBatchBo
                 . $applet . ') on language: (' . $language . ') was unsuccessful: '
                 . $e->getMessage());
         }
+    }
+
+    /**
+     * Gets the language file name for an applet
+     *
+     * @param string $language      The identifier of the language.
+     * @return string               The file name.
+     */
+    protected static function getAppletLanguageCacheFileName($language)
+    {
+        return Config::get('system.paths.root')
+            . '/cache/flash/lang_' . $language . '.xml';
     }
 
     /**
