@@ -119,12 +119,12 @@ class LanguageFilesApi
     /**
      * Perform the LanguageFiles API call and check result.
      *
-     * @param string $method   The API method name.
-     * @param string $language Arguments passed to the method.
+     * @param string $method        The API method name.
+     * @param string $arguments     Arguments passed to the method.
      *
-     * @throws \Exception If the API call was not successful.
+     * @throws \Exception           If the API call was not successful.
      *
-     * @return string Resulting data.
+     * @return string               Resulting data.
      */
     protected function doApiCall($method, $arguments)
     {
