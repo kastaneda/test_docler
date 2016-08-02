@@ -57,7 +57,7 @@ class LanguageBatchBo
      * @param string $language      The identifier of the language.
      * @return string               The file name.
      */
-    protected function getLanguageCacheFileName($application, $language)
+    protected static function getLanguageCacheFileName($application, $language)
     {
         return Config::get('system.paths.root')
             . '/cache/' . $application . '/' . $language . '.php';
@@ -106,8 +106,8 @@ class LanguageBatchBo
     /**
      * Gets the available languages for the given applet.
      *
-     * @param string $applet   The applet identifier.
-     * @return array           The list of the available applet languages.
+     * @param string $applet        The applet identifier.
+     * @return array                The list of the available applet languages.
      */
     protected static function getAppletLanguages($applet)
     {
@@ -122,9 +122,9 @@ class LanguageBatchBo
     /**
      * Gets a language xml for an applet.
      *
-     * @param string $applet      The identifier of the applet.
-     * @param string $language    The language identifier.
-     * @return string|false       The content of the language file or false if weren't able to get it.
+     * @param string $applet        The identifier of the applet.
+     * @param string $language      The language identifier.
+     * @return string|false         The content of the language file or false if weren't able to get it.
      */
     protected static function getAppletLanguageFile($applet, $language)
     {
@@ -178,6 +178,13 @@ class LanguageBatchBo
         return $result['data'];
     }
 
+    /**
+     * Save the data to the file.
+     *
+     * @param string $filename      The name of the file
+     * @param string $content       The data
+     * @return bool                 True if operation was successful.
+     */
     protected static function saveFile($filename, $content)
     {
         $dirname = dirname($filename);
