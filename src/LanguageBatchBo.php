@@ -22,7 +22,9 @@ class LanguageBatchBo
             echo "[APPLICATION: " . $application . "]\n";
             foreach ($languages as $language) {
                 echo "\t[LANGUAGE: " . $language . "]";
-                if (self::generateLanguageFile($application, $language)) {
+                $data = self::getLanguageFile($application, $language);
+                $target = self::getLanguageCacheFileName($application, $language);
+                if (self::saveFile($target, $data)) {
                     echo " OK\n";
                 } else {
                     throw new \Exception('Unable to generate language file!');
@@ -49,30 +51,16 @@ class LanguageBatchBo
     }
 
     /**
-     * Gets the language file for the given language and stores it.
+     * Gets the language file name for the given language.
      *
      * @param string $application   The name of the application.
      * @param string $language      The identifier of the language.
-     * @throws \Exception           If there was an error during the download of the language file.
-     * @return bool                 The success of the operation.
+     * @return string               The file name.
      */
-    protected static function generateLanguageFile($application, $language)
+    protected function getLanguageCacheFileName($application, $language)
     {
-        $languageData = self::getLanguageFile($application, $language);
-        $destination = self::getLanguageCachePath($application) . $language . '.php';
-
-        return self::saveFile($destination, $languageData);
-    }
-
-    /**
-     * Gets the directory of the cached language files.
-     *
-     * @param string $application   The application.
-     * @return string               The directory of the cached language files.
-     */
-    protected static function getLanguageCachePath($application)
-    {
-        return Config::get('system.paths.root') . '/cache/' . $application. '/';
+        return Config::get('system.paths.root')
+            . '/cache/' . $application . '/' . $language . '.php';
     }
 
     /**
