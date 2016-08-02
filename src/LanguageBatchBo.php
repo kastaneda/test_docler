@@ -107,6 +107,9 @@ class LanguageBatchBo
                 echo ' - Available languages: ' . implode(', ', $languages) . "\n";
             }
             $path = Config::get('system.paths.root') . '/cache/flash';
+            if (!is_dir(dirname($path))) {
+                mkdir(dirname($path), 0755, true);
+            }
             foreach ($languages as $language) {
                 $xmlContent = self::getAppletLanguageFile($appletLanguageId, $language);
                 $xmlFile    = $path . '/lang_' . $language . '.xml';
