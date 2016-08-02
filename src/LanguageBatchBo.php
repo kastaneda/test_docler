@@ -37,27 +37,15 @@ class LanguageBatchBo
      * @param string $application   The name of the application.
      * @param string $language      The identifier of the language.
      * @throws \Exception           If there was an error during the download of the language file.
-     * @return string               The content of the language file
+     * @return string               The content of the language file.
      */
     protected static function getLanguageFile($application, $language)
     {
-        $result = ApiCall::call(
-            'system_api',
-            'language_api',
-            array(
-                'system' => 'LanguageFiles',
-                'action' => 'getLanguageFile'
-            ),
-            array('language' => $language)
-        );
-
         try {
-            self::checkForApiErrorResult($result);
+            return self::callLanguageFilesApi('getLanguageFile', ['language' => $language]);
         } catch (\Exception $e) {
             throw new \Exception('Error during getting language file: (' . $application . '/' . $language . ')');
         }
-
-        return $result['data'];
     }
 
     /**
@@ -70,7 +58,7 @@ class LanguageBatchBo
      */
     protected static function generateLanguageFile($application, $language)
     {
-        $languageDate = self::getLanguageFile($application, $language);
+        $languageData = self::getLanguageFile($application, $language);
 
         // If we got correct data we store it.
         $destination = self::getLanguageCachePath($application) . $language . '.php';
@@ -80,7 +68,7 @@ class LanguageBatchBo
             mkdir(dirname($destination), 0755, true);
         }
 
-        $result = file_put_contents($destination, $languageDate);
+        $result = file_put_contents($destination, $languageData);
 
         return (bool)$result;
     }
@@ -144,23 +132,11 @@ class LanguageBatchBo
      */
     protected static function getAppletLanguages($applet)
     {
-        $result = ApiCall::call(
-            'system_api',
-            'language_api',
-            array(
-                'system' => 'LanguageFiles',
-                'action' => 'getAppletLanguages'
-            ),
-            array('applet' => $applet)
-        );
-
         try {
-            self::checkForApiErrorResult($result);
+            return self::callLanguageFilesApi('getAppletLanguages', ['applet' => $applet]);
         } catch (\Exception $e) {
             throw new \Exception('Getting languages for applet (' . $applet . ') was unsuccessful ' . $e->getMessage());
         }
-
-        return $result['data'];
     }
 
 
@@ -173,43 +149,40 @@ class LanguageBatchBo
      */
     protected static function getAppletLanguageFile($applet, $language)
     {
-        $result = ApiCall::call(
-            'system_api',
-            'language_api',
-            array(
-                'system' => 'LanguageFiles',
-                'action' => 'getAppletLanguageFile'
-            ),
-            array(
-                'applet' => $applet,
-                'language' => $language
-            )
-        );
-
         try {
-            self::checkForApiErrorResult($result);
+            return self::callLanguageFilesApi('getAppletLanguageFile', ['applet' => $applet, 'language' => $language]);
         } catch (\Exception $e) {
             throw new \Exception('Getting language xml for applet: ('
                 . $applet . ') on language: (' . $language . ') was unsuccessful: '
                 . $e->getMessage());
         }
-
-        return $result['data'];
     }
 
     /**
-     * Checks the api call result.
+     * Perform the LanguageFiles API call and check result.
      *
-     * @param mixed  $result   The api call result to check.
-     * @throws \Exception      If the api call was not successful.
-     * @return void
+     * @param string $method        The API method name.
+     * @param string $language      Arguments passed to the method.
+     * @throws \Exception           If the API call was not successful.
+     * @return string               Resulting data.
      */
-    protected static function checkForApiErrorResult($result)
+    protected static function callLanguageFilesApi($method, $arguments)
     {
+        $result = ApiCall::call(
+            'system_api',
+            'language_api',
+            [
+                'system' => 'LanguageFiles',
+                'action' => $method,
+            ],
+            $arguments
+        );
+
         // Error during the api call.
         if ($result === false || !isset($result['status'])) {
             throw new \Exception('Error during the api call');
         }
+
         // Wrong response.
         if ($result['status'] != 'OK') {
             throw new \Exception('Wrong response: '
@@ -217,9 +190,12 @@ class LanguageBatchBo
                 . (!empty($result['error_code']) ? 'Code(' . $result['error_code'] . ') ' : '')
                 . ((string)$result['data']));
         }
+
         // Wrong content.
         if ($result['data'] === false) {
             throw new \Exception('Wrong content!');
         }
+
+        return $result['data'];
     }
 }
