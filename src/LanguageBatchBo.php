@@ -59,17 +59,9 @@ class LanguageBatchBo
     protected static function generateLanguageFile($application, $language)
     {
         $languageData = self::getLanguageFile($application, $language);
-
-        // If we got correct data we store it.
         $destination = self::getLanguageCachePath($application) . $language . '.php';
-        // If there is no folder yet, we'll create it.
-        if (!is_dir(dirname($destination))) {
-            mkdir(dirname($destination), 0755, true);
-        }
 
-        $result = file_put_contents($destination, $languageData);
-
-        return (bool)$result;
+        return self::saveFile($destination, $languageData);
     }
 
     /**
@@ -107,13 +99,10 @@ class LanguageBatchBo
                 echo ' - Available languages: ' . implode(', ', $languages) . "\n";
             }
             $path = Config::get('system.paths.root') . '/cache/flash';
-            if (!is_dir(dirname($path))) {
-                mkdir(dirname($path), 0755, true);
-            }
             foreach ($languages as $language) {
                 $xmlContent = self::getAppletLanguageFile($appletLanguageId, $language);
                 $xmlFile    = $path . '/lang_' . $language . '.xml';
-                if (strlen($xmlContent) == file_put_contents($xmlFile, $xmlContent)) {
+                if (self::saveFile($xmlFile, $xmlContent)) {
                     echo " OK saving $xmlFile was successful.\n";
                 } else {
                     throw new \Exception('Unable to save applet: (' . $appletLanguageId . ') language: (' . $language
@@ -199,5 +188,17 @@ class LanguageBatchBo
         }
 
         return $result['data'];
+    }
+
+    protected static function saveFile($filename, $content)
+    {
+        $dirname = dirname($filename);
+
+        // If there is no folder yet, we'll create it.
+        if (!is_dir($dirname)) {
+            mkdir($dirname, 0755, true);
+        }
+
+        return strlen($content) === file_put_contents($filename, $content);
     }
 }
