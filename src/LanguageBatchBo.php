@@ -10,50 +10,49 @@ class LanguageBatchBo
     /** @var LanguageFilesApi */
     protected $languageFilesApi;
 
+    /** @var Storage */
+    protected $storage;
+
+    public function __construct()
+    {
+        $this->languageFilesApi = new LanguageFilesApi(['\\Language\\ApiCall', 'call']);
+        $this->storage = new Storage(Config::get('system.paths.root'));
+    }
+
     protected function getLanguageFilesApi()
     {
-        if (empty($this->languageFilesApi)) {
-            $this->languageFilesApi = new LanguageFilesApi(['\\Language\\ApiCall', 'call']);
-        }
-
         return $this->languageFilesApi;
+    }
+
+    protected function getStorage()
+    {
+        return $this->storage;
     }
 
     /**
      * Starts the language file generation.
+     *
+     * @throws \Exception           If there was an error.
      */
     public function generateLanguageFiles()
     {
         // The applications where we need to translate.
         $applications = Config::get('system.translated_applications');
 
-        echo "\nGenerating language files\n";
+        echo 'Generating language files...' . PHP_EOL;
         foreach ($applications as $application => $languages) {
-            echo '[APPLICATION: '.$application."]\n";
+            echo ' * Application: ' . $application . PHP_EOL;
             foreach ($languages as $language) {
-                echo "\t[LANGUAGE: ".$language.']';
-                $data = $this->getLanguageFilesApi()->getLanguageFile($application, $language);
-                $target = $this->getLanguageCacheFileName($application, $language);
-                if (!$this->saveFile($target, $data)) {
-                    throw new \Exception('Unable to generate language file!');
-                }
-                echo " OK\n";
+                echo ' * Application language: ' . $language . PHP_EOL;
+                $this
+                    ->getStorage()
+                    ->getLanguageCacheFile($application, $language)
+                    ->store($this
+                        ->getLanguageFilesApi()
+                        ->getLanguageFile($application, $language));
             }
         }
-    }
-
-    /**
-     * Gets the language file name for the given language.
-     *
-     * @param string $application   The name of the application.
-     * @param string $language      The identifier of the language.
-     *
-     * @return string               The file name.
-     */
-    protected function getLanguageCacheFileName($application, $language)
-    {
-        return Config::get('system.paths.root')
-            .'/cache/'.$application.'/'.$language.'.php';
+        echo 'Done.' . PHP_EOL . PHP_EOL;
     }
 
     /**
@@ -68,62 +67,27 @@ class LanguageBatchBo
             'memberapplet' => 'JSM2_MemberApplet',
         );
 
-        echo "\nGetting applet language XMLs..\n";
+        echo 'Getting applet language XMLs...' . PHP_EOL;
 
         foreach ($applets as $appletDirectory => $appletLanguageId) {
-            echo " Getting > $appletLanguageId ($appletDirectory) language xmls..\n";
+            echo ' * Getting ' . $appletLanguageId . ' (' . $appletDirectory . ') language XMLs...' . PHP_EOL;
             $languages = $this->getLanguageFilesApi()->getAppletLanguages($appletLanguageId);
             if (empty($languages)) {
-                throw new \Exception('There is no available languages for the '.$appletLanguageId.' applet.');
+                throw new \Exception('There is no available languages for the ' . $appletLanguageId . ' applet.');
             }
 
-            echo ' - Available languages: '.implode(', ', $languages)."\n";
+            echo ' * Available languages: [' . join(', ', $languages) . ']' . PHP_EOL;
             foreach ($languages as $language) {
-                $data = $this->getLanguageFilesApi()->getAppletLanguageFile($appletLanguageId, $language);
-                $target = $this->getAppletLanguageCacheFileName($language);
-                if (!$this->saveFile($target, $data)) {
-                    throw new \Exception('Unable to save applet: ('.$appletLanguageId.') language: ('.$language
-                        .') xml ('.$target.')!');
-                }
-                echo " OK saving $target was successful.\n";
+                $this
+                    ->getStorage()
+                    ->getAppletLanguageCacheFile($language)
+                    ->store($this
+                        ->getLanguageFilesApi()
+                        ->getAppletLanguageFile($appletLanguageId, $language));
+                echo '   Language: ' . $language . ' OK' . PHP_EOL;
             }
-            echo " < $appletLanguageId ($appletDirectory) language xml cached.\n";
         }
 
-        echo "\nApplet language XMLs generated.\n";
-    }
-
-    /**
-     * Gets the language file name for an applet.
-     *
-     * @param string $language      The identifier of the language.
-     *
-     * @return string               The file name.
-     */
-    protected function getAppletLanguageCacheFileName($language)
-    {
-        return Config::get('system.paths.root')
-            .'/cache/flash/lang_'.$language.'.xml';
-    }
-
-
-    /**
-     * Save the data to the file.
-     *
-     * @param string $filename      The name of the file.
-     * @param string $content       The data.
-     *
-     * @return bool                 True if operation was successful.
-     */
-    protected function saveFile($filename, $content)
-    {
-        $dirname = dirname($filename);
-
-        // If there is no folder yet, we'll create it.
-        if (!is_dir($dirname)) {
-            mkdir($dirname, 0755, true);
-        }
-
-        return strlen($content) === file_put_contents($filename, $content);
+        echo 'Done.' . PHP_EOL . PHP_EOL;
     }
 }
