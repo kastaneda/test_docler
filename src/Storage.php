@@ -11,7 +11,7 @@ class Storage
 
     /**
      * Constructor.
-     * 
+     *
      * @param string $root          Application root path.
      */
     public function __construct($root)
@@ -21,7 +21,7 @@ class Storage
 
     /**
      * Get FileStorage for language file.
-     * 
+     *
      * @param string $application   The name of the application.
      * @param string $language      The identifier of the language.
      *

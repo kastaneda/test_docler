@@ -38,5 +38,5 @@ class FileStorage
         if (strlen($data) !== file_put_contents($this->fileName, $data)) {
             throw new \Exception(sprintf(self::ERROR_MESSAGE, $this->fileName));
         }
-   }
+    }
 }

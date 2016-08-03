@@ -13,17 +13,39 @@ class LanguageBatchBo
     /** @var Storage */
     protected $storage;
 
-    public function __construct()
-    {
-        $this->languageFilesApi = new LanguageFilesApi(['\\Language\\ApiCall', 'call']);
-        $this->storage = new Storage(Config::get('system.paths.root'));
+    /** @var array */
+    protected $applets;
+
+    /**
+     * Constructor.
+     *
+     * @param LanguageFilesApi $filesApi
+     * @param Storage $storage
+     * @param array $appletsList
+     */
+    public function __construct(
+        LanguageFilesApi $filesApi = null,
+        Storage $storage = null,
+        $appletsList = null
+    ) {
+        $this->languageFilesApi = $filesApi ?: new LanguageFilesApi(['\\Language\\ApiCall', 'call']);
+        $this->storage = $storage ?: new Storage(Config::get('system.paths.root'));
+        $this->applets = $appletsList ?: [
+            'memberapplet' => 'JSM2_MemberApplet',
+        ];
     }
 
+    /**
+     * @return LanguageFilesApi
+     */
     protected function getLanguageFilesApi()
     {
         return $this->languageFilesApi;
     }
 
+    /**
+     * @return Storage
+     */
     protected function getStorage()
     {
         return $this->storage;
@@ -36,10 +58,9 @@ class LanguageBatchBo
      */
     public function generateLanguageFiles()
     {
-        // The applications where we need to translate.
-        $applications = Config::get('system.translated_applications');
-
         echo 'Generating language files...' . PHP_EOL;
+
+        $applications = Config::get('system.translated_applications');
         foreach ($applications as $application => $languages) {
             echo ' * Application: ' . $application . PHP_EOL;
             foreach ($languages as $language) {
@@ -52,6 +73,7 @@ class LanguageBatchBo
                         ->getLanguageFile($application, $language));
             }
         }
+
         echo 'Done.' . PHP_EOL . PHP_EOL;
     }
 
@@ -62,14 +84,9 @@ class LanguageBatchBo
      */
     public function generateAppletLanguageXmlFiles()
     {
-        // List of the applets [directory => applet_id].
-        $applets = [
-            'memberapplet' => 'JSM2_MemberApplet',
-        ];
-
         echo 'Getting applet language XMLs...' . PHP_EOL;
 
-        foreach ($applets as $appletDirectory => $appletLanguageId) {
+        foreach ($this->applets as $appletDirectory => $appletLanguageId) {
             echo ' * Getting ' . $appletLanguageId . ' (' . $appletDirectory . ') language XMLs...' . PHP_EOL;
             $languages = $this->getLanguageFilesApi()->getAppletLanguages($appletLanguageId);
             if (empty($languages)) {
