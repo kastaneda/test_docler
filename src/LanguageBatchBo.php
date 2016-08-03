@@ -8,21 +8,21 @@ namespace Language;
 class LanguageBatchBo
 {
     /** @var LanguageFilesApi */
-    protected static $languageFilesApi;
+    protected $languageFilesApi;
 
-    protected static function getLanguageFilesApi()
+    protected function getLanguageFilesApi()
     {
-        if (empty(self::$languageFilesApi)) {
-            self::$languageFilesApi = new LanguageFilesApi(['\\Language\\ApiCall', 'call']);
+        if (empty($this->languageFilesApi)) {
+            $this->languageFilesApi = new LanguageFilesApi(['\\Language\\ApiCall', 'call']);
         }
 
-        return self::$languageFilesApi;
+        return $this->languageFilesApi;
     }
 
     /**
      * Starts the language file generation.
      */
-    public static function generateLanguageFiles()
+    public function generateLanguageFiles()
     {
         // The applications where we need to translate.
         $applications = Config::get('system.translated_applications');
@@ -32,9 +32,9 @@ class LanguageBatchBo
             echo '[APPLICATION: '.$application."]\n";
             foreach ($languages as $language) {
                 echo "\t[LANGUAGE: ".$language.']';
-                $data = self::getLanguageFilesApi()->getLanguageFile($application, $language);
-                $target = self::getLanguageCacheFileName($application, $language);
-                if (!self::saveFile($target, $data)) {
+                $data = $this->getLanguageFilesApi()->getLanguageFile($application, $language);
+                $target = $this->getLanguageCacheFileName($application, $language);
+                if (!$this->saveFile($target, $data)) {
                     throw new \Exception('Unable to generate language file!');
                 }
                 echo " OK\n";
@@ -50,7 +50,7 @@ class LanguageBatchBo
      *
      * @return string               The file name.
      */
-    protected static function getLanguageCacheFileName($application, $language)
+    protected function getLanguageCacheFileName($application, $language)
     {
         return Config::get('system.paths.root')
             .'/cache/'.$application.'/'.$language.'.php';
@@ -61,7 +61,7 @@ class LanguageBatchBo
      *
      * @throws \Exception           If there was an error.
      */
-    public static function generateAppletLanguageXmlFiles()
+    public function generateAppletLanguageXmlFiles()
     {
         // List of the applets [directory => applet_id].
         $applets = array(
@@ -72,16 +72,16 @@ class LanguageBatchBo
 
         foreach ($applets as $appletDirectory => $appletLanguageId) {
             echo " Getting > $appletLanguageId ($appletDirectory) language xmls..\n";
-            $languages = self::getLanguageFilesApi()->getAppletLanguages($appletLanguageId);
+            $languages = $this->getLanguageFilesApi()->getAppletLanguages($appletLanguageId);
             if (empty($languages)) {
                 throw new \Exception('There is no available languages for the '.$appletLanguageId.' applet.');
             }
 
             echo ' - Available languages: '.implode(', ', $languages)."\n";
             foreach ($languages as $language) {
-                $data = self::getLanguageFilesApi()->getAppletLanguageFile($appletLanguageId, $language);
-                $target = self::getAppletLanguageCacheFileName($language);
-                if (!self::saveFile($target, $data)) {
+                $data = $this->getLanguageFilesApi()->getAppletLanguageFile($appletLanguageId, $language);
+                $target = $this->getAppletLanguageCacheFileName($language);
+                if (!$this->saveFile($target, $data)) {
                     throw new \Exception('Unable to save applet: ('.$appletLanguageId.') language: ('.$language
                         .') xml ('.$target.')!');
                 }
@@ -100,7 +100,7 @@ class LanguageBatchBo
      *
      * @return string               The file name.
      */
-    protected static function getAppletLanguageCacheFileName($language)
+    protected function getAppletLanguageCacheFileName($language)
     {
         return Config::get('system.paths.root')
             .'/cache/flash/lang_'.$language.'.xml';
@@ -115,7 +115,7 @@ class LanguageBatchBo
      *
      * @return bool                 True if operation was successful.
      */
-    protected static function saveFile($filename, $content)
+    protected function saveFile($filename, $content)
     {
         $dirname = dirname($filename);
 
