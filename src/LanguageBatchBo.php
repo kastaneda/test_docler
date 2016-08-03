@@ -63,9 +63,9 @@ class LanguageBatchBo
     public function generateAppletLanguageXmlFiles()
     {
         // List of the applets [directory => applet_id].
-        $applets = array(
+        $applets = [
             'memberapplet' => 'JSM2_MemberApplet',
-        );
+        ];
 
         echo 'Getting applet language XMLs...' . PHP_EOL;
 
