@@ -35,9 +35,7 @@ class LanguageBatchBo
         $this->languageFilesApi = $filesApi ?: new LanguageFilesApi(['\\Language\\ApiCall', 'call']);
         $this->storage = $storage ?: new Storage(Config::get('system.paths.root'));
         $this->applications = $applicationsList ?: Config::get('system.translated_applications');
-        $this->applets = $appletsList ?: [
-            'memberapplet' => 'JSM2_MemberApplet',
-        ];
+        $this->applets = $appletsList ?: ['memberapplet' => 'JSM2_MemberApplet'];
     }
 
     /**
