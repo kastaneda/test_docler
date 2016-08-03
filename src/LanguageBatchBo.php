@@ -14,6 +14,9 @@ class LanguageBatchBo
     protected $storage;
 
     /** @var array */
+    protected $applications;
+
+    /** @var array */
     protected $applets;
 
     /**
@@ -26,10 +29,12 @@ class LanguageBatchBo
     public function __construct(
         LanguageFilesApi $filesApi = null,
         Storage $storage = null,
+        $applicationsList = null,
         $appletsList = null
     ) {
         $this->languageFilesApi = $filesApi ?: new LanguageFilesApi(['\\Language\\ApiCall', 'call']);
         $this->storage = $storage ?: new Storage(Config::get('system.paths.root'));
+        $this->applications = $applicationsList ?: Config::get('system.translated_applications');
         $this->applets = $appletsList ?: [
             'memberapplet' => 'JSM2_MemberApplet',
         ];
@@ -60,8 +65,7 @@ class LanguageBatchBo
     {
         echo 'Generating language files...' . PHP_EOL;
 
-        $applications = Config::get('system.translated_applications');
-        foreach ($applications as $application => $languages) {
+        foreach ($this->applications as $application => $languages) {
             echo ' * Application: ' . $application . PHP_EOL;
             foreach ($languages as $language) {
                 echo ' * Application language: ' . $language . PHP_EOL;
