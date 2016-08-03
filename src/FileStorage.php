@@ -35,7 +35,8 @@ class FileStorage
             mkdir($dir, self::DIR_MODE, true);
         }
 
-        if (strlen($data) !== file_put_contents($this->fileName, $data)) {
+        // TODO: use better error handling here
+        if (strlen($data) !== @file_put_contents($this->fileName, $data)) {
             throw new \Exception(sprintf(self::ERROR_MESSAGE, $this->fileName));
         }
     }
